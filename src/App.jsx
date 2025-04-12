@@ -1,10 +1,10 @@
+import Hero from "./sections/Hero.jsx"
+
 function App() {
     return (
-        <main>
-            <div>
-                <h1>Welcome to My portfolio</h1>
-            </div>
-        </main>
+        <>
+            <Hero />
+        </>
     )
 }
 
