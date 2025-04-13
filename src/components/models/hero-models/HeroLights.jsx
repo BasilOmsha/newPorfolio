@@ -17,7 +17,7 @@ function HeroLights() {
                 angle={0.3}
                 penumbra={0.5}
                 intensity={40}
-                color="#4cc9f0"
+                color="#4rcc9f0"
             />
             {/* purplish side fill */}
             <spotLight
