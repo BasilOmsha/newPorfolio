@@ -4,6 +4,7 @@ import { useMediaQuery } from "react-responsive"
 
 import { Suspense } from "react"
 import HeroLights from "./HeroLights.jsx"
+import Particles from "./Particles.jsx"
 import { Room } from "./Room.jsx"
 
 const HeroExperience = () => {
@@ -26,7 +27,7 @@ const HeroExperience = () => {
 
             <Suspense fallback={null}>
                 <HeroLights />
-                {/* <Particles count={100} /> */}
+                <Particles count={100} />
                 <group
                     scale={isMobile ? 0.7 : 1}
                     position={[0, -3.5, 0]}
