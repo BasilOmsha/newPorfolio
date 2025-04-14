@@ -1,4 +1,5 @@
 import NavBar from "./components/NavBar.jsx"
+import ExperienceSection from "./sections/ExperienceSection.jsx"
 import FeatureCards from "./sections/FeatureCards.jsx"
 import Hero from "./sections/Hero.jsx"
 import LogoSection from "./sections/LogoSection.jsx"
@@ -12,6 +13,7 @@ function App() {
             <ShowcaseSection />
             <LogoSection />
             <FeatureCards />
+            <ExperienceSection />
         </>
     )
 }
