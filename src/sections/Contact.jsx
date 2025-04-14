@@ -1,3 +1,4 @@
+// TODO: Form validation and sanitation as well as toast notifications for success and error messages
 import emailjs from "@emailjs/browser"
 import { useRef, useState } from "react"
 
