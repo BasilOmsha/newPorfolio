@@ -137,7 +137,7 @@ const techStackIcons = [
     },
     {
         name: "C#",
-        modelPath: "/models/cSharp.glb",
+        modelPath: "/models/cSharp-transformed.glb",
         scale: 0.08,
         rotation: [0, 0, 0]
     },
