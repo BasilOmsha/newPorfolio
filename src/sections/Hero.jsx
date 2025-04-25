@@ -1,11 +1,21 @@
 import { useGSAP } from "@gsap/react"
 import gsap from "gsap"
+import { useEffect, useRef, useState } from "react"
 import AnimatedCounter from "../components/AnimatedCounter.jsx"
 import Button from "../components/Button.jsx"
 import HeroExperience from "../components/models/hero-models/HeroExperience.jsx"
 import { words } from "../constants"
 
 function Hero() {
+    const [isActive, setIsActive] = useState(false)
+    const [cameraProps, setCameraProps] = useState({ position: [3, 30, 40], fov: 30 })
+    const handRef = useRef(null)
+    const cursorHandRef = useRef(null)
+    const handIllustrationRef = useRef(null)
+    const clickRef = useRef(null)
+    const xButtonRef = useRef(null)
+    const xIconRef = useRef(null)
+
     // GSAP Animation for the Hero Text
     useGSAP(() => {
         gsap.fromTo(
@@ -14,6 +24,135 @@ function Hero() {
             { y: 0, opacity: 1, stagger: 0.2, duration: 1, ease: "power2.inOut" }
         )
     })
+
+    // GSAP Animation for the hand
+    useEffect(() => {
+        if (isActive) return // Don't run the animation if active
+
+        // Create a timeline for the hand animation
+        const handTimeline = gsap.timeline({
+            repeat: -1, // Infinite repeat
+            repeatDelay: 1 // Pause between animations
+        })
+
+        // Animation for the hand illustration (switching between open and closed)
+        handTimeline.to(handIllustrationRef.current, {
+            backgroundPosition: "bottom left",
+            duration: 0.2,
+            ease: "power1.inOut"
+        })
+
+        // Animation for the hand movement (left and right)
+        handTimeline.to(handRef.current, {
+            x: -10,
+            duration: 0.2,
+            ease: "power1.inOut"
+        })
+        handTimeline.to(handRef.current, {
+            x: 10,
+            duration: 0.2,
+            ease: "power1.inOut"
+        })
+        handTimeline.to(handRef.current, {
+            x: 0,
+            duration: 0.2,
+            ease: "power1.inOut"
+        })
+
+        // Return to open hand state
+        handTimeline.to(handIllustrationRef.current, {
+            backgroundPosition: "top left",
+            duration: 0.2,
+            ease: "power1.inOut"
+        })
+
+        return () => {
+            handTimeline.kill() // Clean up the animation when component unmounts
+        }
+    }, [isActive])
+
+    // Handle hover animation for X button
+    useEffect(() => {
+        if (!xIconRef.current) return
+
+        // Set up hover effect for X icon rotation
+        xButtonRef.current?.addEventListener("mouseenter", () => {
+            gsap.to(xIconRef.current, {
+                rotation: 90,
+                duration: 0.3,
+                ease: "power2.out"
+            })
+        })
+
+        xButtonRef.current?.addEventListener("mouseleave", () => {
+            gsap.to(xIconRef.current, {
+                rotation: 0,
+                duration: 0.3,
+                ease: "power2.out"
+            })
+        })
+
+        return () => {
+            // Clean up event listeners
+            xButtonRef.current?.removeEventListener("mouseenter", () => {})
+            xButtonRef.current?.removeEventListener("mouseleave", () => {})
+        }
+    }, [isActive])
+
+    // useEffect(() => {
+    //     if (!cursorHandRef.current) return
+
+    //     // Set up the on press down effect for cursor to change to a closed hand
+    //     cursorHandRef.current.addEventListener("mousedown", () => {
+    //         cursorHandRef.current.style.cursor = "grabbing"
+    //         gsap.to(cursorHandRef.current, {
+    //             backgroundPosition: "bottom left",
+    //             duration: 0.2,
+    //             ease: "power2.out"
+    //         })
+    //     })
+    //     // Set up the on press up effect for cursor to change to an open hand
+    //     cursorHandRef.current.addEventListener("mouseup", () => {
+    //         cursorHandRef.current.style.cursor = "grab"
+    //         gsap.to(cursorHandRef.current, {
+    //             backgroundPosition: "top left",
+    //             duration: 0.2,
+    //             ease: "power2.out"
+    //         })
+    //     })
+    //     // Set up the on leave effect for cursor to change to an open hand
+    //     cursorHandRef.current.addEventListener("mouseleave", () => {
+    //         gsap.to(cursorHandRef.current, {
+    //             backgroundPosition: "top left",
+    //             duration: 0.2,
+    //             ease: "power2.out"
+    //         })
+    //     })
+
+    //     return () => {
+    //         // Clean up event listeners
+    //         cursorHandRef.current.removeEventListener("mousedown", () => {})
+    //         cursorHandRef.current.removeEventListener("mouseup", () => {})
+    //         cursorHandRef.current.removeEventListener("mouseleave", () => {})
+    //     }
+    // }, [isActive])
+
+    const handleHandClick = () => {
+        setIsActive(true)
+    }
+
+    const handleXClick = () => {
+        // Update camera position when X is clicked
+        setCameraProps({ position: [3, 30, 40], fov: 30 })
+        // Note: We're not setting isActive to false immediately
+        // This allows the camera to move before deactivating
+
+        // Optional: Add a delay before deactivating to allow camera animation to complete
+        setTimeout(() => {
+            setIsActive(false)
+            setCameraProps(null)
+        }, 1500) // Adjust timing as needed for your animation
+    }
 
     return (
         <>
@@ -44,7 +183,7 @@ function Hero() {
                                                     className="flex items-center md:gap-3 gap-1 pb-2"
                                                 >
                                                     <img
-                                                        src={word.imgPath}
+                                                        src={word.imgPath || "/placeholder.svg"}
                                                         alt="person"
                                                         className="xl:size-12 md:size-10 size-7 md:p-2 p-1 rounded-full bg-white-50"
                                                     />
@@ -59,7 +198,7 @@ function Hero() {
                             </div>
 
                             <p className="text-white-50 md:text-xl relative z-10 pointer-events-none">
-                                Hi, I’m Basil, a developer based in Finland with a passion for code.
+                                Hi, I'm Basil, a developer based in Finland with a passion for code.
                             </p>
 
                             <Button
@@ -72,8 +211,92 @@ function Hero() {
 
                     {/* RIGHT SIDE: 3D Model  */}
                     <figure>
-                        <div className="hero-3d-layout">
-                            <HeroExperience isActive={true} />
+                        <div
+                            className="hero-3d-layout"
+                            style={{ cursor: "grab" }}
+                            ref={cursorHandRef}
+                        >
+                            <HeroExperience
+                                isActive={isActive}
+                                cameraProps={cameraProps}
+                                setIsActive={setIsActive}
+                            />
+
+                            {/* Hand Button - shown when not active */}
+                            {!isActive && (
+                                <div ref={clickRef} style={styles.click} onClick={handleHandClick}>
+                                    <div style={styles.arrowContainer}>
+                                        <div style={{ ...styles.arrow, ...styles.isArrowLeft }}>
+                                            <svg
+                                                width="11"
+                                                height="7"
+                                                viewBox="0 0 11 7"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    clipRule="evenodd"
+                                                    d="M5.5 7C5.10218 7 4.72064 6.84197 4.43934 6.56066L0.439339 2.56066C-0.146447 1.97487 -0.146447 1.02513 0.439339 0.43934C1.02513 -0.146446 1.97487 -0.146446 2.56066 0.43934L5.5 3.37868L8.43934 0.43934C9.02513 -0.146447 9.97487 -0.146447 10.5607 0.439339C11.1464 1.02513 11.1464 1.97487 10.5607 2.56066L6.56066 6.56066C6.27936 6.84197 5.89782 7 5.5 7Z"
+                                                    fill="#333"
+                                                ></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div ref={handRef} style={styles.hand}>
+                                        <div
+                                            ref={handIllustrationRef}
+                                            style={styles.handIllustration}
+                                        ></div>
+                                    </div>
+                                    <div style={styles.arrowContainer}>
+                                        <div style={{ ...styles.arrow, ...styles.isArrowRight }}>
+                                            <svg
+                                                width="11"
+                                                height="7"
+                                                viewBox="0 0 11 7"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                            >
+                                                <path
+                                                    fillRule="evenodd"
+                                                    clipRule="evenodd"
+                                                    d="M5.5 7C5.10218 7 4.72064 6.84197 4.43934 6.56066L0.439339 2.56066C-0.146447 1.97487 -0.146447 1.02513 0.439339 0.43934C1.02513 -0.146446 1.97487 -0.146446 2.56066 0.43934L5.5 3.37868L8.43934 0.43934C9.02513 -0.146447 9.97487 -0.146447 10.5607 0.439339C11.1464 1.02513 11.1464 1.97487 10.5607 2.56066L6.56066 6.56066C6.27936 6.84197 5.89782 7 5.5 7Z"
+                                                    fill="#333"
+                                                ></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* X Button - shown when active */}
+                            {isActive && (
+                                <div ref={xButtonRef} style={styles.xButton} onClick={handleXClick}>
+                                    <div ref={xIconRef} style={styles.xIcon}>
+                                        <svg
+                                            width="14"
+                                            height="14"
+                                            viewBox="0 0 14 14"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                d="M13 1L1 13"
+                                                stroke="#333"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                            />
+                                            <path
+                                                d="M1 1L13 13"
+                                                stroke="#333"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                            />
+                                        </svg>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </figure>
                 </div>
@@ -84,3 +307,86 @@ function Hero() {
 }
 
 export default Hero
+
+const styles = {
+    click: {
+        position: "absolute",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bottom: "45px",
+        left: "calc(50% - 77px)",
+        width: "154px",
+        height: "52px",
+        background: "#fff",
+        borderRadius: "29px",
+        boxShadow: "0 30px 70px #3c00bd22",
+        willChange: "transform",
+        cursor: "grab", // Changed to pointer since it's now clickable
+        zIndex: 3,
+        userSelect: "none",
+        transitionProperty: "opacity, transform",
+        transitionDuration: "0.5s"
+    },
+    xButton: {
+        position: "absolute",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bottom: "45px",
+        left: "calc(50% - 25px)", // Centered
+        width: "50px",
+        height: "50px",
+        background: "#fff",
+        borderRadius: "50%", // Round button
+        boxShadow: "0 30px 70px #3c00bd22",
+        willChange: "transform",
+        cursor: "pointer",
+        zIndex: 3,
+        userSelect: "none",
+        transitionProperty: "opacity, transform",
+        transitionDuration: "0.5s"
+    },
+    xIcon: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "20px",
+        height: "20px",
+        willChange: "transform"
+    },
+    arrowContainer: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "24px",
+        height: "24px"
+    },
+    arrow: {
+        position: "relative",
+        width: "16px",
+        height: "16px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    isArrowLeft: {
+        transform: "rotate(90deg)"
+    },
+    isArrowRight: {
+        transform: "rotate(-90deg)"
+    },
+    hand: {
+        width: "30px",
+        height: "30px",
+        margin: "0 17px",
+        overflow: "hidden"
+    },
+    handIllustration: {
+        width: "30px",
+        height: "30px",
+        backgroundImage: "url(/images/hands.png)", // Make sure this image exists with open hand on top half, closed hand on bottom half
+        backgroundSize: "30px 60px",
+        backgroundPosition: "top left"
+    }
+}

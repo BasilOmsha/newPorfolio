@@ -1,32 +1,86 @@
 import { OrbitControls } from "@react-three/drei"
-import { Canvas } from "@react-three/fiber"
+import { Canvas, useThree } from "@react-three/fiber"
+import gsap from "gsap"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useMediaQuery } from "react-responsive"
-
-import { Suspense } from "react"
 import Nature from "./Nature.jsx"
+// import { Room } from "./Room.jsx"
 // import { Nature2 } from "./Nature2.jsx"
+// import HeroLights from "./HeroLights.jsx"
 import Particles from "./Particles.jsx"
 
-const HeroExperience = ({ isActive }) => {
+const HeroExperience = ({ isActive, cameraProps, setIsActive }) => {
     const isMobile = useMediaQuery({ query: "(max-width: 768px)" })
     // const isTablet = useMediaQuery({ query: "(max-width: 1024px)" })
+    const canvasContainerRef = useRef(null)
+    const [isDragging, setIsDragging] = useState(false)
 
+    // Handle mouse events for cursor changes and activation
+    useEffect(() => {
+        const container = canvasContainerRef.current
+        if (!container) return
+
+        const handleMouseDown = () => {
+            // Change cursor to grabbing
+            container.style.cursor = "grabbing"
+            setIsDragging(true)
+
+            // Activate the experience if not already active
+            if (!isActive) {
+                setIsActive(true)
+            }
+        }
+
+        const handleMouseUp = () => {
+            // Change cursor back to grab
+            container.style.cursor = "grab"
+            setIsDragging(false)
+        }
+
+        const handleMouseLeave = () => {
+            // Reset cursor when mouse leaves the container
+            container.style.cursor = "grab"
+            setIsDragging(false)
+        }
+
+        // Add event listeners
+        container.addEventListener("mousedown", handleMouseDown)
+        window.addEventListener("mouseup", handleMouseUp)
+        container.addEventListener("mouseleave", handleMouseLeave)
+
+        // Clean up event listeners
+        return () => {
+            container.removeEventListener("mousedown", handleMouseDown)
+            window.removeEventListener("mouseup", handleMouseUp)
+            container.removeEventListener("mouseleave", handleMouseLeave)
+        }
+    }, [isActive, setIsActive])
+
+    const handleCanvasClick = () => {
+        if (!isActive) {
+            setIsActive(true)
+        }
+    }
     return (
-        <Canvas flat camera={{ position: [3, 30, 40], fov: 30 }}>
-            {/* <Canvas flat camera={{ position: [-10.5, -30.5, 55], fov: 45 }}> */}
+        <Canvas
+            flat
+            camera={{
+                position: [3, 30, 40],
+                fov: 30
+            }}
+            onClick={handleCanvasClick}
+            ref={canvasContainerRef}
+        >
+            {/* Camera controller */}
+            <Camera_Orbit_Control
+                isActive={isActive}
+                cameraProps={cameraProps}
+                isDragging={isDragging}
+            />
+
             {/* deep blue ambient */}
             <ambientLight intensity={0.2} color="#1a1a40" />
-            {/* Configure OrbitControls to disable panning and control zoom based on device type */}
-            {isActive && (
-                <OrbitControls
-                    enablePan={false} // Prevents panning of the scene
-                    // enableZoom={!isTablet} // Disables zoom on tablets
-                    maxDistance={200} // Maximum distance for zooming out
-                    minDistance={5} // Minimum distance for zooming in
-                    minPolarAngle={Math.PI / 5} // Minimum angle for vertical rotation
-                    maxPolarAngle={Math.PI / 2} // Maximum angle for vertical rotation
-                />
-            )}
+
             <Suspense fallback={null}>
                 {/* <HeroLights /> */}
                 <Particles count={100} />
@@ -40,6 +94,51 @@ const HeroExperience = ({ isActive }) => {
                 </group>
             </Suspense>
         </Canvas>
+    )
+}
+
+// Camera control component
+function Camera_Orbit_Control({ isActive, cameraProps }) {
+    const { camera } = useThree()
+
+    // Update camera when cameraProps changes
+    useEffect(() => {
+        if (cameraProps) {
+            // Animate camera position change
+            if (cameraProps.position) {
+                gsap.to(camera.position, {
+                    x: cameraProps.position[0],
+                    y: cameraProps.position[1],
+                    z: cameraProps.position[2],
+                    duration: 1.5,
+                    ease: "power2.inOut"
+                })
+            }
+
+            // Animate FOV change
+            if (cameraProps.fov && camera.fov !== cameraProps.fov) {
+                gsap.to(camera, {
+                    fov: cameraProps.fov,
+                    duration: 1.5,
+                    ease: "power2.inOut",
+                    onUpdate: () => camera.updateProjectionMatrix()
+                })
+            }
+        }
+    }, [camera, cameraProps])
+
+    // Render OrbitControls
+    return (
+        <OrbitControls
+            enabled={isActive}
+            enableDamping={true}
+            dampingFactor={0.05}
+            enablePan={false} // Prevents panning of the scene
+            maxDistance={200} // Maximum distance for zooming out
+            minDistance={5} // Minimum distance for zooming in
+            minPolarAngle={Math.PI / 5} // Minimum angle for vertical rotation
+            maxPolarAngle={Math.PI / 2} // Maximum angle for vertical rotation
+        />
     )
 }
 

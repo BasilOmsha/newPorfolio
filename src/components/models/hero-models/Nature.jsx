@@ -50,7 +50,7 @@ function Nature() {
                 position={nodes.Icosphere.position}
                 rotation={nodes.Icosphere.rotation}
             />
-            <mesh
+            {/* <mesh
                 geometry={nodes.fog.geometry}
                 material={nodes.fog.material}
                 position={nodes.fog.position}
@@ -58,7 +58,7 @@ function Nature() {
                 scene={{ fog: new THREE.Fog(0xcccccc, 10, 15) }}
             >
                 <meshStandardMaterial transparent={true} opacity={0.9} color="#ffffff" />
-            </mesh>
+            </mesh> */}
             <mesh
                 geometry={nodes.Turbulence.geometry}
                 material={nodes.Turbulence.material}
