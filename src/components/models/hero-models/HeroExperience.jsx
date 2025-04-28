@@ -9,7 +9,7 @@ import Nature from "./Nature.jsx"
 // import HeroLights from "./HeroLights.jsx"
 import Particles from "./Particles.jsx"
 
-const HeroExperience = ({ isActive, cameraProps, setIsActive }) => {
+const HeroExperience = ({ isActive, cameraProps, setCameraProps, setIsActive }) => {
     const isMobile = useMediaQuery({ query: "(max-width: 768px)" })
     // const isTablet = useMediaQuery({ query: "(max-width: 1024px)" })
     const canvasContainerRef = useRef(null)
@@ -28,6 +28,7 @@ const HeroExperience = ({ isActive, cameraProps, setIsActive }) => {
             // Activate the experience if not already active
             if (!isActive) {
                 setIsActive(true)
+                setCameraProps({ position: [13, 30, 40], fov: 20 })
             }
         }
 
@@ -56,19 +57,13 @@ const HeroExperience = ({ isActive, cameraProps, setIsActive }) => {
         }
     }, [isActive, setIsActive])
 
-    const handleCanvasClick = () => {
-        if (!isActive) {
-            setIsActive(true)
-        }
-    }
     return (
         <Canvas
             flat
             camera={{
                 position: [3, 30, 40],
-                fov: 30
+                fov: 40
             }}
-            onClick={handleCanvasClick}
             ref={canvasContainerRef}
         >
             {/* Camera controller */}

@@ -33,6 +33,32 @@ body {
   pointer-events: none;
 }
 
+.click {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: 160px;
+  left: calc(50% - 77px);
+  width: 154px;
+  height: 52px;
+  background: #fff;
+  border-radius: 29px;
+  box-shadow: 0 30px 70px #3c00bd22;
+  will-change: transform;
+  cursor: grab;
+  z-index: 3;
+  user-select: none;
+  transition-property: opacity,transform;
+  transition-duration: 0.5s
+}
+
+@media (max-width: 1024px) {
+  .click, .x-button {
+    bottom: 160px;
+  }
+}
+
 section {
   width: 100dvw;
 }

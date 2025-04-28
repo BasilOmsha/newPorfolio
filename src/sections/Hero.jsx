@@ -9,8 +9,8 @@ import { words } from "../constants"
 function Hero() {
     const [isActive, setIsActive] = useState(false)
     const [cameraProps, setCameraProps] = useState({ position: [3, 30, 40], fov: 30 })
+
     const handRef = useRef(null)
-    const cursorHandRef = useRef(null)
     const handIllustrationRef = useRef(null)
     const clickRef = useRef(null)
     const xButtonRef = useRef(null)
@@ -25,6 +25,18 @@ function Hero() {
         )
     })
 
+    useEffect(() => {
+        const container = clickRef.current
+        if (!container) return
+
+        const handleMouseDown = () => {
+            container.style.cursor = "grabbing"
+        }
+
+        container.addEventListener("mousedown", handleMouseDown)
+        return () => container.removeEventListener("mousedown", handleMouseDown)
+    }, [isActive])
+
     // GSAP Animation for the hand
     useEffect(() => {
         if (isActive) return // Don't run the animation if active
@@ -36,122 +48,58 @@ function Hero() {
         })
 
         // Animation for the hand illustration (switching between open and closed)
-        handTimeline.to(handIllustrationRef.current, {
-            backgroundPosition: "bottom left",
-            duration: 0.2,
-            ease: "power1.inOut"
-        })
+        handTimeline
+            .to(handIllustrationRef.current, {
+                backgroundPosition: "bottom left",
+                duration: 0.2,
+                ease: "power1.inOut"
+            })
+            .to(handRef.current, { x: -10, duration: 0.2 })
+            .to(handRef.current, { x: 10, duration: 0.2 })
+            .to(handRef.current, { x: 0, duration: 0.2 })
+            .to(handIllustrationRef.current, {
+                // Switch back to open hand
+                backgroundPosition: "top left",
+                duration: 0.2
+            })
 
-        // Animation for the hand movement (left and right)
-        handTimeline.to(handRef.current, {
-            x: -10,
-            duration: 0.2,
-            ease: "power1.inOut"
-        })
-        handTimeline.to(handRef.current, {
-            x: 10,
-            duration: 0.2,
-            ease: "power1.inOut"
-        })
-        handTimeline.to(handRef.current, {
-            x: 0,
-            duration: 0.2,
-            ease: "power1.inOut"
-        })
-
-        // Return to open hand state
-        handTimeline.to(handIllustrationRef.current, {
-            backgroundPosition: "top left",
-            duration: 0.2,
-            ease: "power1.inOut"
-        })
-
-        return () => {
-            handTimeline.kill() // Clean up the animation when component unmounts
-        }
+        return () => handTimeline.kill() // Clean up the timeline on unmount
     }, [isActive])
 
     // Handle hover animation for X button
     useEffect(() => {
-        if (!xIconRef.current) return
+        const xButton = xButtonRef.current
+        const xIcon = xIconRef.current
+        if (!xButton || !xIcon) return
 
-        // Set up hover effect for X icon rotation
-        xButtonRef.current?.addEventListener("mouseenter", () => {
-            gsap.to(xIconRef.current, {
-                rotation: 90,
-                duration: 0.3,
-                ease: "power2.out"
-            })
-        })
+        const handleMouseEnter = () => {
+            gsap.to(xIcon, { rotation: 90, duration: 0.3, ease: "power2.out" })
+        }
+        const handleMouseLeave = () => {
+            gsap.to(xIcon, { rotation: 0, duration: 0.3, ease: "power2.out" })
+        }
 
-        xButtonRef.current?.addEventListener("mouseleave", () => {
-            gsap.to(xIconRef.current, {
-                rotation: 0,
-                duration: 0.3,
-                ease: "power2.out"
-            })
-        })
+        xButton.addEventListener("mouseenter", handleMouseEnter)
+        xButton.addEventListener("mouseleave", handleMouseLeave)
 
         return () => {
-            // Clean up event listeners
-            xButtonRef.current?.removeEventListener("mouseenter", () => {})
-            xButtonRef.current?.removeEventListener("mouseleave", () => {})
+            xButton.removeEventListener("mouseenter", handleMouseEnter)
+            xButton.removeEventListener("mouseleave", handleMouseLeave)
         }
     }, [isActive])
 
-    // useEffect(() => {
-    //     if (!cursorHandRef.current) return
-
-    //     // Set up the on press down effect for cursor to change to a closed hand
-    //     cursorHandRef.current.addEventListener("mousedown", () => {
-    //         cursorHandRef.current.style.cursor = "grabbing"
-    //         gsap.to(cursorHandRef.current, {
-    //             backgroundPosition: "bottom left",
-    //             duration: 0.2,
-    //             ease: "power2.out"
-    //         })
-    //     })
-    //     // Set up the on press up effect for cursor to change to an open hand
-    //     cursorHandRef.current.addEventListener("mouseup", () => {
-    //         cursorHandRef.current.style.cursor = "grab"
-    //         gsap.to(cursorHandRef.current, {
-    //             backgroundPosition: "top left",
-    //             duration: 0.2,
-    //             ease: "power2.out"
-    //         })
-    //     })
-    //     // Set up the on leave effect for cursor to change to an open hand
-    //     cursorHandRef.current.addEventListener("mouseleave", () => {
-    //         gsap.to(cursorHandRef.current, {
-    //             backgroundPosition: "top left",
-    //             duration: 0.2,
-    //             ease: "power2.out"
-    //         })
-    //     })
-
-    //     return () => {
-    //         // Clean up event listeners
-    //         cursorHandRef.current.removeEventListener("mousedown", () => {})
-    //         cursorHandRef.current.removeEventListener("mouseup", () => {})
-    //         cursorHandRef.current.removeEventListener("mouseleave", () => {})
-    //     }
-    // }, [isActive])
-
     const handleHandClick = () => {
         setIsActive(true)
+        setCameraProps({ position: [13, 30, 40], fov: 20 })
     }
 
     const handleXClick = () => {
-        // Update camera position when X is clicked
+        // Update camera position
         setCameraProps({ position: [3, 30, 40], fov: 30 })
-        // Note: We're not setting isActive to false immediately
-        // This allows the camera to move before deactivating
 
-        // Optional: Add a delay before deactivating to allow camera animation to complete
         setTimeout(() => {
             setIsActive(false)
-            setCameraProps(null)
-        }, 1500) // Adjust timing as needed for your animation
+        }, 1500)
     }
 
     return (
@@ -165,7 +113,7 @@ function Hero() {
                         backgroundSize: "cover"
                     }}
                 >
-                    {/* <img src="/images/bg2.png" alt="Background" height="20px" /> */}
+                    {/* <img src="/images/bg.png" alt="Background" height="20px" /> */}
                 </div>
 
                 <div className="hero-layout">
@@ -173,8 +121,9 @@ function Hero() {
                     <header className="flex flex-col justify-center md:w-full w-screen md:px-20 px-5">
                         <div className="flex flex-col gap-7">
                             <div className="hero-text">
+                                <h1>From</h1>
                                 <h1>
-                                    Shaping
+                                    curious
                                     <span className="slide">
                                         <span className="wrapper">
                                             {words.map((word, index) => (
@@ -193,8 +142,9 @@ function Hero() {
                                         </span>
                                     </span>
                                 </h1>
-                                <h1>into Real Projects</h1>
-                                <h1>that Deliver Results</h1>
+                                <h1> to boss-level bugs </h1>
+                                <h1> I build projects </h1>
+                                <h1> and level up with every line</h1>
                             </div>
 
                             <p className="text-white-50 md:text-xl relative z-10 pointer-events-none">
@@ -211,20 +161,22 @@ function Hero() {
 
                     {/* RIGHT SIDE: 3D Model  */}
                     <figure>
-                        <div
-                            className="hero-3d-layout"
-                            style={{ cursor: "grab" }}
-                            ref={cursorHandRef}
-                        >
+                        <div className="hero-3d-layout" style={{ cursor: "grab" }}>
                             <HeroExperience
                                 isActive={isActive}
                                 cameraProps={cameraProps}
+                                setCameraProps={setCameraProps}
                                 setIsActive={setIsActive}
                             />
 
                             {/* Hand Button - shown when not active */}
                             {!isActive && (
-                                <div ref={clickRef} style={styles.click} onClick={handleHandClick}>
+                                <div
+                                    ref={clickRef}
+                                    className="click"
+                                    // style={styles.click}
+                                    onClick={handleHandClick}
+                                >
                                     <div style={styles.arrowContainer}>
                                         <div style={{ ...styles.arrow, ...styles.isArrowLeft }}>
                                             <svg
@@ -272,7 +224,12 @@ function Hero() {
 
                             {/* X Button - shown when active */}
                             {isActive && (
-                                <div ref={xButtonRef} style={styles.xButton} onClick={handleXClick}>
+                                <div
+                                    ref={xButtonRef}
+                                    className="x-button"
+                                    style={styles.xButton}
+                                    onClick={handleXClick}
+                                >
                                     <div ref={xIconRef} style={styles.xIcon}>
                                         <svg
                                             width="14"
@@ -322,7 +279,7 @@ const styles = {
         borderRadius: "29px",
         boxShadow: "0 30px 70px #3c00bd22",
         willChange: "transform",
-        cursor: "grab", // Changed to pointer since it's now clickable
+        cursor: "grab",
         zIndex: 3,
         userSelect: "none",
         transitionProperty: "opacity, transform",
@@ -333,12 +290,12 @@ const styles = {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bottom: "45px",
-        left: "calc(50% - 25px)", // Centered
+        bottom: "160px",
+        left: "calc(50% - 25px)",
         width: "50px",
         height: "50px",
         background: "#fff",
-        borderRadius: "50%", // Round button
+        borderRadius: "50%",
         boxShadow: "0 30px 70px #3c00bd22",
         willChange: "transform",
         cursor: "pointer",
